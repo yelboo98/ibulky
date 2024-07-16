@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image URL Validator</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+        .invalid {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image URL Validator</h1>
+    <button onclick="pasteData()">Paste</button>
+    <button onclick="validateUrls()">Validate URLs</button>
+    <button onclick="copyData()">Copy</button>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Gender</th>
+                <th>SellerSKU</th>
+                <th>Parent SKU</th>
+                <th>Image 1</th>
+                <th>Image 2</th>
+                <th>Image 3</th>
+                <th>Image 4</th>
+                <th>Image 5</th>
+                <th>Image 6</th>
+                <th>Image 7</th>
+                <th>Image 8</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        function pasteData() {
+            navigator.clipboard.readText().then(text => {
+                const rows = text.trim().split('\n');
+                const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+                table.innerHTML = ''; // Clear existing rows
+                rows.forEach(row => {
+                    const cells = row.split('\t');
+                    const newRow = table.insertRow();
+                    cells.forEach(cell => {
+                        const newCell = newRow.insertCell();
+                        newCell.textContent = cell;
+                    });
+                });
+            }).catch(err => {
+                alert('Failed to read clipboard contents: ' + err);
+            });
+        }
+
+        async function isValidImageURL(url) {
+            return new Promise((resolve, reject) => {
+                var img = new Image();
+                img.onload = function() {
+                    resolve(true);
+                };
+                img.onerror = function() {
+                    resolve(false);
+                };
+                img.src = url;
+            });
+        }
+
+        async function validateUrls() {
+            const table = document.getElementById('dataTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            for (let row of rows) {
+                for (let i = 3; i < row.cells.length; i++) { // Assuming URL columns start from the 4th column
+                    const url = row.cells[i].textContent;
+                    const isValid = await isValidImageURL(url);
+                    if (!isValid) {
+                        row.cells[i].classList.add('invalid');
+                    } else {
+                        row.cells[i].classList.remove('invalid');
+                    }
+                }
+            }
+        }
+
+        function copyData() {
+            const table = document.getElementById('dataTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let text = '';
+
+            for (let row of rows) {
+                const cells = Array.from(row.cells).map(cell => cell.classList.contains('invalid') ? '' : cell.textContent);
+                text += cells.join('\t') + '\n';
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Data copied to clipboard');
+            }).catch(err => {
+                alert('Failed to copy data: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
